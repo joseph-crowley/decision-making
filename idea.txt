@@ -1,0 +1,15 @@
+A POMDP, or Partially Observable Markov Decision Process, is a mathematical framework for modeling decision-making problems in situations where an agent must make decisions based on incomplete or uncertain information about the environment. A POMDP is an extension of the Markov Decision Process (MDP) that accounts for partial observability.
+
+In a POMDP, the agent's knowledge about the environment is represented by a probability distribution over the possible states, called the belief state. The agent interacts with the environment by taking actions, receiving observations, and updating its belief state based on these observations. The goal of the agent is to find an optimal policy that maps belief states to actions, maximizing the expected cumulative reward over time.
+
+A POMDP is defined by the following components:
+
+1. A finite set of states (S) representing the possible situations in the environment.
+2. A finite set of actions (A) that the agent can take in each state.
+3. A finite set of observations (O) that the agent can receive after taking an action.
+4. A state transition function (T) that defines the probability of transitioning from one state to another given an action.
+5. An observation function (Z) that defines the probability of receiving an observation given a state and an action.
+6. A reward function (R) that defines the immediate reward received by the agent after taking an action in a state.
+7. A discount factor (γ) that determines the relative importance of future rewards compared to immediate rewards.
+
+Solving a POMDP involves finding an optimal policy that maps belief states to actions, maximizing the expected cumulative reward over time. This can be a challenging computational problem, and various algorithms have been developed to find approximate solutions for POMDPs.

@@ -13,7 +13,7 @@ class POMDP:
     def update_belief(self, belief, action, observation):
         updated_belief = np.zeros(self.n_states)
         for s in range(self.n_states):
-            updated_belief[s] = self.Z[s, action, observation] * np.sum(self.T[:, action, s] * belief)
+            updated_belief[s] = self.Z[action, observation, s] * np.sum(self.T[:, action, s] * belief)
         return updated_belief / np.sum(updated_belief)
 
     def qmdp(self, n_iterations=100):
@@ -21,20 +21,23 @@ class POMDP:
         for _ in range(n_iterations):
             for s in range(self.n_states):
                 for a in range(self.n_actions):
-                    Q[s, a] = self.R[s, a] + self.gamma * np.sum(self.T[s, a] * np.max(Q, axis=1))
+                    Q[s, a] = self.R[s, a] + self.gamma * np.sum(self.T[:, s, a] * np.max(Q, axis=1))
         return Q
 
     def pbvi(self, n_iterations=100, n_points=10):
         value_function = np.random.rand(n_points, self.n_states)
 
         for _ in range(n_iterations):
-            alpha_vectors = np.zeros((self.n_actions, self.n_states))
+            alpha_vectors = np.zeros((self.n_actions, n_points, self.n_states))
             for a in range(self.n_actions):
-                alpha_vectors[a] = self.R[:, a] + self.gamma * np.dot(self.T[:, a], np.dot(self.Z[:, a], value_function.T))
+                for i in range(n_points):
+                    for s in range(self.n_states):
+                        alpha_vectors[a, i, s] = self.R[s, a] + self.gamma * np.sum(self.T[s, a, :] * value_function[i, :])
 
             new_value_function = np.zeros_like(value_function)
             for i, point in enumerate(value_function):
-                new_value_function[i] = alpha_vectors[np.argmax(np.dot(alpha_vectors, point)), :]
+                max_action = np.argmax(np.sum(alpha_vectors * point, axis=2), axis=0)
+                new_value_function[i] = alpha_vectors[max_action[i], i, :]
 
             value_function = new_value_function
 
@@ -46,7 +49,8 @@ class POMDP:
             return np.argmax(np.dot(belief, Q))
         elif solver == 'pbvi':
             value_function = self.pbvi(n_iterations, n_points)
-            return np.argmax(np.dot(value_function, belief))
+            action_values = np.dot(value_function, belief)
+            return np.argmax(np.max(action_values, axis=0))  # select the action that gives the highest expected reward
         else:
             raise ValueError("Invalid solver. Choose either 'qmdp' or 'pbvi'.")
 
@@ -61,7 +65,7 @@ class POMDP:
 
             true_state = np.random.choice(self.n_states, p=belief)
             next_state = np.random.choice(self.n_states, p=self.T[true_state, action])
-            observation = np.random.choice(self.n_observations, p=self.Z[next_state, action])
+            observation = np.random.choice(self.n_observations, p=self.Z[action, next_state])
 
             belief = self.update_belief(belief, action, observation)
 
